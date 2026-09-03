@@ -255,6 +255,11 @@
     color:var(--missed);
     cursor:pointer;
   }
+   .cell.paused {
+       background: #fef5d4;
+       color: var(--gold);
+       cursor: default;
+   }
   .cell.done{
     background:var(--done);
     color:#fff;
@@ -337,26 +342,39 @@
     return new Date(y, m-1, d);
   }
 
-  async function load(){
-    try{
-      const res = await localGet('tracker-state');
-      if(res && res.value){
-        const parsed = JSON.parse(res.value);
-        state.objectives = parsed.objectives || [];
-        state.completions = parsed.completions || {};
-      }
-    }catch(e){
-      // no existing data yet, start fresh
+  function isPaused(id, dstr){
+    if(state.pauses && state.pauses[id] && state.pauses[id][dstr]) return true;
+    const obj = state.objectives.find(o=>o.id===id);
+    if(obj && obj.paused && obj.pausedSince){
+      if(dstr >= obj.pausedSince && dstr <= todayStr()) return true;
     }
-    ready = true;
-    if(state.objectives.length && !selectedObjectiveId){
-      selectedObjectiveId = state.objectives[0].id;
-    }
-    const now = new Date();
-    calYear = now.getFullYear();
-    calMonth = now.getMonth();
-    render();
+    return false;
   }
+
+  async function load(){
+  try{
+    const res = await localGet('tracker-state');
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      state.objectives = parsed.objectives || [];
+      state.completions = parsed.completions || {};
+      state.pauses = parsed.pauses || {};
+    }
+  }catch(e){
+    // no existing data yet, start fresh
+  }
+
+  ready = true;
+
+  if(state.objectives.length && !selectedObjectiveId){
+    selectedObjectiveId = state.objectives[0].id;
+  }
+
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  render();
+}
 
   async function save(){
     try{
@@ -417,8 +435,13 @@
     const comp = state.completions[id] || {};
     const cursor = new Date(start);
     while(cursor <= end){
-      total++;
-      if(comp[fmt(cursor)]) done++;
+      const dstr = fmt(cursor);
+      if(comp[dstr]){
+        total++;
+        done++;
+      } else if(!isPaused(id, dstr)) {
+        total++; // Solo suma un día fallado si NO estaba pausado
+      }
       cursor.setDate(cursor.getDate()+1);
     }
     return {done, total};
@@ -446,22 +469,49 @@
   function renderToday(){
     const t = todayStr();
     if(!state.objectives.length){
-      return `<div class="empty">Todavía no tienes objetivos. Añade el primero abajo — aparecerá cada día para que lo marques como hecho.</div>` + renderAddRow();
+      return `<div class="empty">Todavía no tienes objetivos. Añade el primero abajo.</div>` + renderAddRow();
     }
-    const rows = state.objectives.map(o => {
+
+    // Separar objetivos activos de los pausados
+    const activos = state.objectives.filter(o => !o.paused);
+    const pausados = state.objectives.filter(o => o.paused);
+
+    let rows = '';
+
+    // Dibujar los ACTIVOS
+    activos.forEach(o => {
       const done = !!(state.completions[o.id] && state.completions[o.id][t]);
       const streak = streakFor(o.id);
-      return `
+      rows += `
         <div class="obj-row">
-          <button class="check ${done?'done':''}" data-action="toggle" data-id="${o.id}" data-date="${t}" aria-label="Marcar ${escapeHtml(o.name)}">
+          <button class="check ${done?'done':''}" data-action="toggle" data-id="${o.id}">
             <svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
-          <span class="obj-name ${done?'done':''}" data-action="toggle" data-id="${o.id}" data-date="${t}">${escapeHtml(o.name)}</span>
+          <span class="obj-name ${done?'done':''}" data-action="toggle" data-id="${o.id}">${escapeHtml(o.name)}</span>
           <span class="streak ${streak>=3?'hot':''}">${streak>0? streak+'d' : ''}</span>
-          <button class="del" data-action="delete" data-id="${o.id}" aria-label="Eliminar">×</button>
+          <button class="del" data-action="pause" data-id="${o.id}" title="Pausar">⏸️</button>
+          <button class="del" data-action="delete" data-id="${o.id}" title="Eliminar">×</button>
         </div>
       `;
-    }).join('');
+    });
+
+    // Dibujar los PAUSADOS (Amarillos y al final)
+    if(pausados.length > 0) {
+      rows += `<div style="margin-top:24px; margin-bottom: 8px; font-size:13px; color:var(--muted); font-weight:600;">Pausados</div>`;
+      pausados.forEach(o => {
+        const streak = streakFor(o.id);
+        rows += `
+          <div class="obj-row" style="background-color: #fef5d4; padding: 4px 10px; border-radius: 6px; border-bottom: none; margin-bottom: 6px;">
+            <button class="check" disabled style="opacity: 0.3; cursor: not-allowed;"></button>
+            <span class="obj-name" style="color: var(--gold); text-decoration: none;">${escapeHtml(o.name)}</span>
+            <span class="streak ${streak>=3?'hot':''}">${streak>0? streak+'d' : ''}</span>
+            <button class="del" data-action="pause" data-id="${o.id}" title="Reanudar">▶️</button>
+            <button class="del" data-action="delete" data-id="${o.id}" title="Eliminar">×</button>
+          </div>
+        `;
+      });
+    }
+
     return rows + renderAddRow();
   }
 
@@ -483,7 +533,9 @@
     const picker = `
       <div class="obj-picker">
         ${state.objectives.map(o => `
-          <button class="obj-pick ${o.id===selectedObjectiveId?'active':''}" data-action="select" data-id="${o.id}">${escapeHtml(o.name)}</button>
+          <button class="obj-pick ${o.id===selectedObjectiveId?'active':''}" data-action="select" data-id="${o.id}">
+            ${escapeHtml(o.name)} ${o.paused ? '⏸️' : ''}
+          </button>
         `).join('')}
       </div>
     `;
@@ -494,7 +546,6 @@
     const t = todayStr();
 
     const first = new Date(calYear, calMonth, 1);
-    // Monday-first offset
     let startOffset = first.getDay() - 1;
     if(startOffset < 0) startOffset = 6;
     const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
@@ -506,13 +557,16 @@
       const dstr = fmt(d);
       let cls = 'cell';
       let clickable = false;
+      
       if(d < new Date(createdAt.getFullYear(),createdAt.getMonth(),createdAt.getDate())){
-        cls += ' future'; // before objective existed — neutral, not clickable
+        cls += ' future';
       } else if(dstr > t){
         cls += ' future';
       } else if(comp[dstr]){
         cls += ' done';
         clickable = true;
+      } else if(isPaused(selectedObjectiveId, dstr)) {
+        cls += ' paused'; 
       } else {
         cls += ' past';
         clickable = true;
@@ -535,13 +589,13 @@
       <div class="grid">${cells}</div>
       <div class="legend">
         <span><i class="dot" style="background:var(--done)"></i>Cumplido</span>
-        <span><i class="dot" style="background:var(--missed-dim);border:1px solid var(--missed)"></i>No cumplido</span>
-        <span><i class="dot" style="background:var(--future)"></i>Sin datos</span>
+        <span><i class="dot" style="background:var(--missed-dim);border:1px solid var(--missed)"></i>Fallo</span>
+        <span><i class="dot" style="background:#fef5d4;border:1px solid var(--gold)"></i>Pausado</span>
       </div>
       <div class="stats">
-        <div class="stat"><b>${pct}%</b><span>cumplimiento total</span></div>
-        <div class="stat"><b>${streak}</b><span>racha actual (días)</span></div>
-        <div class="stat"><b>${rate.done}/${rate.total}</b><span>días desde el inicio</span></div>
+        <div class="stat"><b>${pct}%</b><span>cumplimiento</span></div>
+        <div class="stat"><b>${streak}</b><span>racha (días)</span></div>
+        <div class="stat"><b>${rate.done}/${rate.total}</b><span>días activos</span></div>
       </div>
     `;
   }
@@ -574,7 +628,41 @@
     } else if(action === 'toggle'){
       toggle(el.dataset.id, el.dataset.date);
     } else if(action === 'delete'){
-      deleteObjective(el.dataset.id);
+      // Añadimos el aviso de confirmación nativo del navegador
+      if(confirm('¿Eliminar el objetivo? Se perderá todo el progreso con este objetivo.')){
+        deleteObjective(el.dataset.id);
+      }
+    } else if(action === 'pause'){
+      const id = el.dataset.id;
+      const obj = state.objectives.find(o => o.id === id);
+      if(!state.pauses) state.pauses = {};
+      if(!state.pauses[id]) state.pauses[id] = {};
+
+      if(obj) {
+        if(obj.paused) {
+          // Al Reanudar: Guarda los días que estuvo pausado en el historial
+          obj.paused = false;
+          if(obj.pausedSince) {
+            let curr = parse(obj.pausedSince);
+            const end = new Date();
+            while(curr <= end) {
+              const dstr = fmt(curr);
+              if(!state.completions[id] || !state.completions[id][dstr]) {
+                 state.pauses[id][dstr] = true;
+              }
+              curr.setDate(curr.getDate() + 1);
+            }
+            obj.pausedSince = null;
+          }
+        } else {
+          // Al Pausar: Anota la fecha de hoy
+          obj.paused = true;
+          obj.pausedSince = todayStr();
+          state.pauses[id][todayStr()] = true;
+        }
+        save();
+        render();
+      }
     } else if(action === 'add'){
       const input = document.getElementById('new-obj-input');
       addObjective(input.value);
