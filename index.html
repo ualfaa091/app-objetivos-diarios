@@ -1,693 +1,784 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Objetivos</title>
-<meta name="description" content="Marca tus objetivos diarios y revisa tu progreso en un calendario.">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2E6F63">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Objetivos">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Objetivos</title>
+    <meta name="description" content="Marca tus objetivos diarios y revisa tu progreso en un calendario.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2E6F63">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Objetivos">
 </head>
 <body>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<style>
-  :root{
-    --paper: #F6F3EC;
-    --paper-dim: #EFEBE0;
-    --ink: #232B24;
-    --muted: #6E6A58;
-    --line: #DAD4C2;
-    --teal: #2E6F63;
-    --teal-dim: #E4EDE9;
-    --gold: #B8912B;
-    --done: #3F8F5F;
-    --done-dim: #DCEBE0;
-    --missed: #B4483A;
-    --missed-dim: #F3E0DB;
-    --future: #E4E0D2;
-    --radius: 3px;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:'Inter',sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  #app{
-    max-width:640px;
-    margin:0 auto;
-    padding:28px 20px 80px;
-  }
-  .app-header{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    border-bottom:1px solid var(--ink);
-    padding-bottom:14px;
-    margin-bottom:6px;
-  }
-  .app-title{
-    font-family:'Fraunces',serif;
-    font-weight:500;
-    font-size:26px;
-    letter-spacing:-0.01em;
-    margin:0;
-  }
-  .app-date{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12.5px;
-    color:var(--muted);
-  }
-  .tabs{
-    display:flex;
-    gap:22px;
-    margin:22px 0 22px;
-  }
-  .tab{
-    font-family:'Inter',sans-serif;
-    font-size:14px;
-    font-weight:500;
-    color:var(--muted);
-    background:none;
-    border:none;
-    padding:0 0 8px;
-    cursor:pointer;
-    border-bottom:2px solid transparent;
-  }
-  .tab.active{
-    color:var(--ink);
-    border-bottom-color:var(--teal);
-  }
+    <style>
+        :root {
+            --paper: #F6F3EC;
+            --paper-dim: #EFEBE0;
+            --ink: #232B24;
+            --muted: #6E6A58;
+            --line: #DAD4C2;
+            --teal: #2E6F63;
+            --teal-dim: #E4EDE9;
+            --gold: #B8912B;
+            --done: #3F8F5F;
+            --done-dim: #DCEBE0;
+            --missed: #B4483A;
+            --missed-dim: #F3E0DB;
+            --future: #E4E0D2;
+            --radius: 3px;
+        }
 
-  /* Today view */
-  .obj-row{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    padding:14px 0;
-    border-bottom:1px solid var(--line);
-  }
-  .check{
-    flex:0 0 auto;
-    width:24px;height:24px;
-    border-radius:50%;
-    border:1.6px solid var(--ink);
-    cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    background:transparent;
-    transition:background .12s ease, border-color .12s ease;
-  }
-  .check.done{
-    background:var(--done);
-    border-color:var(--done);
-  }
-  .check svg{width:13px;height:13px;opacity:0;transition:opacity .12s ease;}
-  .check.done svg{opacity:1;}
-  .obj-name{
-    flex:1 1 auto;
-    font-size:16px;
-    cursor:pointer;
-  }
-  .obj-name.done{
-    color:var(--muted);
-    text-decoration:line-through;
-    text-decoration-color:var(--line);
-  }
-  .streak{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    color:var(--muted);
-    min-width:26px;
-    text-align:right;
-  }
-  .streak.hot{color:var(--gold);}
-  .del{
-    flex:0 0 auto;
-    background:none;border:none;cursor:pointer;
-    color:var(--muted);
-    font-size:16px;
-    line-height:1;
-    padding:4px;
-    opacity:.5;
-  }
-  .del:hover{opacity:1;color:var(--missed);}
+        * {
+            box-sizing: border-box;
+        }
 
-  .add-row{
-    display:flex;
-    gap:10px;
-    padding:16px 0 4px;
-  }
-  .add-row input{
-    flex:1;
-    font-family:'Inter',sans-serif;
-    font-size:15px;
-    border:none;
-    border-bottom:1px solid var(--line);
-    background:transparent;
-    padding:8px 2px;
-    color:var(--ink);
-  }
-  .add-row input:focus{outline:none;border-bottom-color:var(--teal);}
-  .add-row button{
-    font-family:'Inter',sans-serif;
-    font-size:13.5px;
-    font-weight:500;
-    background:var(--ink);
-    color:var(--paper);
-    border:none;
-    padding:0 16px;
-    border-radius:var(--radius);
-    cursor:pointer;
-  }
-  .add-row button:disabled{opacity:.35;cursor:default;}
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
 
-  .empty{
-    padding:30px 0;
-    color:var(--muted);
-    font-size:14.5px;
-    line-height:1.6;
-  }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'Inter',sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
-  /* Calendar view */
-  .obj-picker{
-    display:flex;
-    gap:20px;
-    overflow-x:auto;
-    padding-bottom:10px;
-    margin-bottom:18px;
-    border-bottom:1px solid var(--line);
-  }
-  .obj-pick{
-    background:none;border:none;cursor:pointer;
-    font-family:'Inter',sans-serif;
-    font-size:14px;
-    color:var(--muted);
-    white-space:nowrap;
-    padding-bottom:10px;
-    border-bottom:2px solid transparent;
-    margin-bottom:-11px;
-  }
-  .obj-pick.active{color:var(--ink);font-weight:500;border-bottom-color:var(--teal);}
+        #app {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 28px 20px 80px;
+        }
 
-  .month-nav{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:16px;
-  }
-  .month-nav .label{
-    font-family:'Fraunces',serif;
-    font-size:19px;
-  }
-  .month-nav button{
-    background:none;border:1px solid var(--line);
-    width:30px;height:30px;
-    border-radius:50%;
-    cursor:pointer;
-    color:var(--ink);
-    font-size:15px;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .month-nav button:hover{border-color:var(--ink);}
+        .app-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--ink);
+            padding-bottom: 14px;
+            margin-bottom: 6px;
+        }
 
-  .weekdays{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    margin-bottom:6px;
-  }
-  .weekdays span{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    color:var(--muted);
-    text-align:center;
-  }
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:4px;
-  }
-  .cell{
-    aspect-ratio:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12.5px;
-    border-radius:var(--radius);
-    background:var(--future);
-    color:var(--muted);
-    cursor:default;
-    position:relative;
-  }
-  .cell.pad{background:transparent;}
-  .cell.past{
-    background:var(--missed-dim);
-    color:var(--missed);
-    cursor:pointer;
-  }
-   .cell.paused {
-       background: #fef5d4;
-       color: var(--gold);
-       cursor: default;
-   }
-  .cell.done{
-    background:var(--done);
-    color:#fff;
-    cursor:pointer;
-  }
-  .cell.today{box-shadow:0 0 0 1.6px var(--ink) inset;}
-  .cell.future{cursor:default;}
+        .app-title {
+            font-family: 'Fraunces',serif;
+            font-weight: 500;
+            font-size: 26px;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
 
-  .legend{
-    display:flex;gap:16px;margin-top:18px;
-    font-size:12px;color:var(--muted);
-  }
-  .legend span{display:flex;align-items:center;gap:6px;}
-  .dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
+        .app-date {
+            font-family: 'IBM Plex Mono',monospace;
+            font-size: 12.5px;
+            color: var(--muted);
+        }
 
-  .stats{
-    margin-top:20px;
-    padding-top:16px;
-    border-top:1px solid var(--line);
-    display:flex;
-    gap:28px;
-  }
-  .stat b{
-    display:block;
-    font-family:'Fraunces',serif;
-    font-size:22px;
-    font-weight:500;
-  }
-  .stat span{
-    font-size:11.5px;
-    color:var(--muted);
-  }
+        .tabs {
+            display: flex;
+            gap: 22px;
+            margin: 22px 0 22px;
+        }
 
-  .loading{padding:40px 0;color:var(--muted);font-size:14px;}
-</style>
+        .tab {
+            font-family: 'Inter',sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--muted);
+            background: none;
+            border: none;
+            padding: 0 0 8px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
 
-<div id="app"><div class="loading">Cargando…</div></div>
+            .tab.active {
+                color: var(--ink);
+                border-bottom-color: var(--teal);
+            }
 
-<script>
-(function(){
+        /* Today view */
+        .obj-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--line);
+        }
 
-  function localGet(key){
-    return new Promise((resolve) => {
-      try{
+        .check {
+            flex: 0 0 auto;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1.6px solid var(--ink);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            transition: background .12s ease, border-color .12s ease;
+        }
+
+            .check.done {
+                background: var(--done);
+                border-color: var(--done);
+            }
+
+            .check svg {
+                width: 13px;
+                height: 13px;
+                opacity: 0;
+                transition: opacity .12s ease;
+            }
+
+            .check.done svg {
+                opacity: 1;
+            }
+
+        .obj-name {
+            flex: 1 1 auto;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+            .obj-name.done {
+                color: var(--muted);
+                text-decoration: line-through;
+                text-decoration-color: var(--line);
+            }
+
+        .streak {
+            font-family: 'IBM Plex Mono',monospace;
+            font-size: 12px;
+            color: var(--muted);
+            min-width: 26px;
+            text-align: right;
+        }
+
+            .streak.hot {
+                color: var(--gold);
+            }
+
+        .del {
+            flex: 0 0 auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1;
+            padding: 4px;
+            opacity: .5;
+        }
+
+            .del:hover {
+                opacity: 1;
+                color: var(--missed);
+            }
+
+        .add-row {
+            display: flex;
+            gap: 10px;
+            padding: 16px 0 4px;
+        }
+
+            .add-row input {
+                flex: 1;
+                font-family: 'Inter',sans-serif;
+                font-size: 15px;
+                border: none;
+                border-bottom: 1px solid var(--line);
+                background: transparent;
+                padding: 8px 2px;
+                color: var(--ink);
+            }
+
+                .add-row input:focus {
+                    outline: none;
+                    border-bottom-color: var(--teal);
+                }
+
+            .add-row button {
+                font-family: 'Inter',sans-serif;
+                font-size: 13.5px;
+                font-weight: 500;
+                background: var(--ink);
+                color: var(--paper);
+                border: none;
+                padding: 0 16px;
+                border-radius: var(--radius);
+                cursor: pointer;
+            }
+
+                .add-row button:disabled {
+                    opacity: .35;
+                    cursor: default;
+                }
+
+        .empty {
+            padding: 30px 0;
+            color: var(--muted);
+            font-size: 14.5px;
+            line-height: 1.6;
+        }
+
+        /* Calendar view */
+        .obj-picker {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .obj-pick {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'Inter',sans-serif;
+            font-size: 14px;
+            color: var(--muted);
+            white-space: nowrap;
+            padding-bottom: 10px;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -11px;
+        }
+
+            .obj-pick.active {
+                color: var(--ink);
+                font-weight: 500;
+                border-bottom-color: var(--teal);
+            }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+            .month-nav .label {
+                font-family: 'Fraunces',serif;
+                font-size: 19px;
+            }
+
+            .month-nav button {
+                background: none;
+                border: 1px solid var(--line);
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                cursor: pointer;
+                color: var(--ink);
+                font-size: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+                .month-nav button:hover {
+                    border-color: var(--ink);
+                }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            margin-bottom: 6px;
+        }
+
+            .weekdays span {
+                font-family: 'IBM Plex Mono',monospace;
+                font-size: 11px;
+                color: var(--muted);
+                text-align: center;
+            }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            gap: 4px;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono',monospace;
+            font-size: 12.5px;
+            border-radius: var(--radius);
+            background: var(--future);
+            color: var(--muted);
+            cursor: default;
+            position: relative;
+        }
+
+            .cell.pad {
+                background: transparent;
+            }
+
+            .cell.past {
+                background: var(--missed-dim);
+                color: var(--missed);
+                cursor: pointer;
+            }
+
+            .cell.paused {
+                background: #fef5d4;
+                color: var(--gold);
+                cursor: default;
+            }
+
+            .cell.done {
+                background: var(--done);
+                color: #fff;
+                cursor: pointer;
+            }
+
+            .cell.today {
+                box-shadow: 0 0 0 1.6px var(--ink) inset;
+            }
+
+            .cell.future {
+                cursor: default;
+            }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 18px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+            .legend span {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--line);
+            display: flex;
+            gap: 28px;
+        }
+
+        .stat b {
+            display: block;
+            font-family: 'Fraunces',serif;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .stat span {
+            font-size: 11.5px;
+            color: var(--muted);
+        }
+
+        .loading {
+            padding: 40px 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+    </style>
+
+    <div id="app"><div class="loading">Cargando…</div></div>
+
+    <script>
+        (function(){
+
+        function localGet(key){
+        return new Promise((resolve) => {
+        try{
         const v = localStorage.getItem(key);
         resolve(v === null ? null : { value: v });
-      }catch(e){ resolve(null); }
-    });
-  }
-  function localSet(key, value){
-    return new Promise((resolve, reject) => {
-      try{
+        }catch(e){ resolve(null); }
+        });
+        }
+        function localSet(key, value){
+        return new Promise((resolve, reject) => {
+        try{
         localStorage.setItem(key, value);
         resolve(true);
-      }catch(e){ reject(e); }
-    });
-  }
+        }catch(e){ reject(e); }
+        });
+        }
 
-  const DOW = ['L','M','X','J','V','S','D'];
-  const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        const DOW = ['L','M','X','J','V','S','D'];
+        const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-  let state = { objectives: [], completions: {} };
-  let view = 'today';
-  let selectedObjectiveId = null;
-  let calYear, calMonth; // calMonth 0-11
-  let ready = false;
+        let state = { objectives: [], completions: {}, pauses: {} };
+        let view = 'today';
+        let selectedObjectiveId = null;
+        let calYear, calMonth;
+        let ready = false;
 
-  function todayStr(){
-    const d = new Date();
-    return fmt(d);
-  }
-  function fmt(d){
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,'0');
-    const day = String(d.getDate()).padStart(2,'0');
-    return `${y}-${m}-${day}`;
-  }
-  function parse(dstr){
-    const [y,m,d] = dstr.split('-').map(Number);
-    return new Date(y, m-1, d);
-  }
+        function todayStr(){
+        const d = new Date();
+        return fmt(d);
+        }
+        function fmt(d){
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${day}`;
+        }
+        function parse(dstr){
+        const [y,m,d] = dstr.split('-').map(Number);
+        return new Date(y, m-1, d);
+        }
 
-  function isPaused(id, dstr){
-    if(state.pauses && state.pauses[id] && state.pauses[id][dstr]) return true;
-    const obj = state.objectives.find(o=>o.id===id);
-    if(obj && obj.paused && obj.pausedSince){
-      if(dstr >= obj.pausedSince && dstr <= todayStr()) return true;
-    }
-    return false;
-  }
+        function isPaused(id, dstr){
+        if(state.pauses && state.pauses[id] && state.pauses[id][dstr]) return true;
+        const obj = state.objectives.find(o=>o.id===id);
+        if(obj && obj.paused && obj.pausedSince){
+        if(dstr >= obj.pausedSince && dstr <= todayStr()) return true;
+        }
+        return false;
+        }
 
-  async function load(){
-  try{
-    const res = await localGet('tracker-state');
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      state.objectives = parsed.objectives || [];
-      state.completions = parsed.completions || {};
-      state.pauses = parsed.pauses || {};
-    }
-  }catch(e){
-    // no existing data yet, start fresh
-  }
+        async function load(){
+        try{
+        const res = await localGet('tracker-state');
+        if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        state.objectives = parsed.objectives || [];
+        state.completions = parsed.completions || {};
+        state.pauses = parsed.pauses || {};
+        }
+        }catch(e){
+        // no existing data yet, start fresh
+        }
+        ready = true;
+        if(state.objectives.length && !selectedObjectiveId){
+        selectedObjectiveId = state.objectives[0].id;
+        }
+        const now = new Date();
+        calYear = now.getFullYear();
+        calMonth = now.getMonth();
+        render();
+        }
 
-  ready = true;
+        async function save(){
+        try{
+        await localSet('tracker-state', JSON.stringify(state));
+        }catch(e){
+        console.error('No se pudo guardar', e);
+        }
+        }
 
-  if(state.objectives.length && !selectedObjectiveId){
-    selectedObjectiveId = state.objectives[0].id;
-  }
+        function addObjective(name){
+        name = name.trim();
+        if(!name) return;
+        const id = 'o' + Date.now();
+        state.objectives.push({ id, name, createdAt: todayStr(), paused: false });
+        state.completions[id] = {};
+        if(!state.pauses) state.pauses = {};
+        state.pauses[id] = {};
+        selectedObjectiveId = id;
+        save();
+        render();
+        }
 
-  const now = new Date();
-  calYear = now.getFullYear();
-  calMonth = now.getMonth();
-  render();
-}
-
-  async function save(){
-    try{
-      await localSet('tracker-state', JSON.stringify(state));
-    }catch(e){
-      console.error('No se pudo guardar', e);
-    }
-  }
-
-  function addObjective(name){
-    name = name.trim();
-    if(!name) return;
-    const id = 'o' + Date.now();
-    state.objectives.push({ id, name, createdAt: todayStr() });
-    state.completions[id] = {};
-    selectedObjectiveId = id;
-    save();
-    render();
-  }
-
-  function deleteObjective(id){
-    state.objectives = state.objectives.filter(o => o.id !== id);
-    delete state.completions[id];
-    if(selectedObjectiveId === id){
-      selectedObjectiveId = state.objectives.length ? state.objectives[0].id : null;
-    }
-    save();
-    render();
-  }
-
-  function toggle(id, dstr){
-    if(!state.completions[id]) state.completions[id] = {};
-    if(state.completions[id][dstr]) delete state.completions[id][dstr];
-    else state.completions[id][dstr] = true;
-    save();
-    render();
-  }
-
-  function streakFor(id){
-    const comp = state.completions[id] || {};
-    let n = 0;
-    let d = new Date();
-    // if today not done yet, start counting from yesterday
-    if(!comp[fmt(d)]) d.setDate(d.getDate()-1);
-    while(comp[fmt(d)]){
-      n++;
-      d.setDate(d.getDate()-1);
-    }
-    return n;
-  }
-
-  function completionRate(id){
-    const obj = state.objectives.find(o=>o.id===id);
-    if(!obj) return {done:0,total:0};
-    const start = parse(obj.createdAt);
-    const end = new Date();
-    let total = 0, done = 0;
-    const comp = state.completions[id] || {};
-    const cursor = new Date(start);
-    while(cursor <= end){
-      const dstr = fmt(cursor);
-      if(comp[dstr]){
-        total++;
-        done++;
-      } else if(!isPaused(id, dstr)) {
-        total++; // Solo suma un día fallado si NO estaba pausado
-      }
-      cursor.setDate(cursor.getDate()+1);
-    }
-    return {done, total};
-  }
-
-  function render(){
-    const app = document.getElementById('app');
-    if(!ready){ app.innerHTML = '<div class="loading">Cargando…</div>'; return; }
-
-    const header = `
-      <div class="app-header">
-        <h1 class="app-title">Objetivos</h1>
-        <div class="app-date">${todayStr()}</div>
-      </div>
-      <div class="tabs">
-        <button class="tab ${view==='today'?'active':''}" data-action="view" data-view="today">Hoy</button>
-        <button class="tab ${view==='calendar'?'active':''}" data-action="view" data-view="calendar">Calendario</button>
-      </div>
-    `;
-
-    app.innerHTML = header + (view === 'today' ? renderToday() : renderCalendar());
-    attachEvents();
-  }
-
-  function renderToday(){
-    const t = todayStr();
-    if(!state.objectives.length){
-      return `<div class="empty">Todavía no tienes objetivos. Añade el primero abajo.</div>` + renderAddRow();
-    }
-
-    // Separar objetivos activos de los pausados
-    const activos = state.objectives.filter(o => !o.paused);
-    const pausados = state.objectives.filter(o => o.paused);
-
-    let rows = '';
-
-    // Dibujar los ACTIVOS
-    activos.forEach(o => {
-      const done = !!(state.completions[o.id] && state.completions[o.id][t]);
-      const streak = streakFor(o.id);
-      rows += `
-        <div class="obj-row">
-          <button class="check ${done?'done':''}" data-action="toggle" data-id="${o.id}">
-            <svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <span class="obj-name ${done?'done':''}" data-action="toggle" data-id="${o.id}">${escapeHtml(o.name)}</span>
-          <span class="streak ${streak>=3?'hot':''}">${streak>0? streak+'d' : ''}</span>
-          <button class="del" data-action="pause" data-id="${o.id}" title="Pausar">⏸️</button>
-          <button class="del" data-action="delete" data-id="${o.id}" title="Eliminar">×</button>
-        </div>
-      `;
-    });
-
-    // Dibujar los PAUSADOS (Amarillos y al final)
-    if(pausados.length > 0) {
-      rows += `<div style="margin-top:24px; margin-bottom: 8px; font-size:13px; color:var(--muted); font-weight:600;">Pausados</div>`;
-      pausados.forEach(o => {
-        const streak = streakFor(o.id);
-        rows += `
-          <div class="obj-row" style="background-color: #fef5d4; padding: 4px 10px; border-radius: 6px; border-bottom: none; margin-bottom: 6px;">
-            <button class="check" disabled style="opacity: 0.3; cursor: not-allowed;"></button>
-            <span class="obj-name" style="color: var(--gold); text-decoration: none;">${escapeHtml(o.name)}</span>
-            <span class="streak ${streak>=3?'hot':''}">${streak>0? streak+'d' : ''}</span>
-            <button class="del" data-action="pause" data-id="${o.id}" title="Reanudar">▶️</button>
-            <button class="del" data-action="delete" data-id="${o.id}" title="Eliminar">×</button>
-          </div>
-        `;
-      });
-    }
-
-    return rows + renderAddRow();
-  }
-
-  function renderAddRow(){
-    return `
-      <div class="add-row">
-        <input id="new-obj-input" type="text" placeholder="Nuevo objetivo diario…" maxlength="60" />
-        <button data-action="add" id="add-btn">Añadir</button>
-      </div>
-    `;
-  }
-
-  function renderCalendar(){
-    if(!state.objectives.length){
-      return `<div class="empty">Añade un objetivo en la pestaña «Hoy» para poder ver su calendario aquí.</div>`;
-    }
-    if(!selectedObjectiveId) selectedObjectiveId = state.objectives[0].id;
-
-    const picker = `
-      <div class="obj-picker">
-        ${state.objectives.map(o => `
-          <button class="obj-pick ${o.id===selectedObjectiveId?'active':''}" data-action="select" data-id="${o.id}">
-            ${escapeHtml(o.name)} ${o.paused ? '⏸️' : ''}
-          </button>
-        `).join('')}
-      </div>
-    `;
-
-    const obj = state.objectives.find(o=>o.id===selectedObjectiveId);
-    const comp = state.completions[selectedObjectiveId] || {};
-    const createdAt = parse(obj.createdAt);
-    const t = todayStr();
-
-    const first = new Date(calYear, calMonth, 1);
-    let startOffset = first.getDay() - 1;
-    if(startOffset < 0) startOffset = 6;
-    const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
-
-    let cells = '';
-    for(let i=0;i<startOffset;i++) cells += `<div class="cell pad"></div>`;
-    for(let day=1; day<=daysInMonth; day++){
-      const d = new Date(calYear, calMonth, day);
-      const dstr = fmt(d);
-      let cls = 'cell';
-      let clickable = false;
-      
-      if(d < new Date(createdAt.getFullYear(),createdAt.getMonth(),createdAt.getDate())){
-        cls += ' future';
-      } else if(dstr > t){
-        cls += ' future';
-      } else if(comp[dstr]){
-        cls += ' done';
-        clickable = true;
-      } else if(isPaused(selectedObjectiveId, dstr)) {
-        cls += ' paused'; 
-      } else {
-        cls += ' past';
-        clickable = true;
-      }
-      if(dstr === t) cls += ' today';
-      cells += `<div class="${cls}" ${clickable?`data-action="toggle" data-id="${selectedObjectiveId}" data-date="${dstr}"`:''}>${day}</div>`;
-    }
-
-    const rate = completionRate(selectedObjectiveId);
-    const pct = rate.total ? Math.round((rate.done/rate.total)*100) : 0;
-    const streak = streakFor(selectedObjectiveId);
-
-    return picker + `
-      <div class="month-nav">
-        <button data-action="prev-month">‹</button>
-        <span class="label">${MONTHS[calMonth]} ${calYear}</span>
-        <button data-action="next-month">›</button>
-      </div>
-      <div class="weekdays">${DOW.map(d=>`<span>${d}</span>`).join('')}</div>
-      <div class="grid">${cells}</div>
-      <div class="legend">
-        <span><i class="dot" style="background:var(--done)"></i>Cumplido</span>
-        <span><i class="dot" style="background:var(--missed-dim);border:1px solid var(--missed)"></i>Fallo</span>
-        <span><i class="dot" style="background:#fef5d4;border:1px solid var(--gold)"></i>Pausado</span>
-      </div>
-      <div class="stats">
-        <div class="stat"><b>${pct}%</b><span>cumplimiento</span></div>
-        <div class="stat"><b>${streak}</b><span>racha (días)</span></div>
-        <div class="stat"><b>${rate.done}/${rate.total}</b><span>días activos</span></div>
-      </div>
-    `;
-  }
-
-  function escapeHtml(s){
-    const div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
-  }
-
-  function attachEvents(){
-    const app = document.getElementById('app');
-    app.querySelectorAll('[data-action]').forEach(el => {
-      el.addEventListener('click', onAction);
-    });
-    const input = document.getElementById('new-obj-input');
-    if(input){
-      input.addEventListener('keydown', e => {
-        if(e.key === 'Enter') addObjective(input.value);
-      });
-    }
-  }
-
-  function onAction(e){
-    const el = e.currentTarget;
-    const action = el.dataset.action;
-    if(action === 'view'){
-      view = el.dataset.view;
-      render();
-    } else if(action === 'toggle'){
-      toggle(el.dataset.id, el.dataset.date);
-    } else if(action === 'delete'){
-      // Añadimos el aviso de confirmación nativo del navegador
-      if(confirm('¿Eliminar el objetivo? Se perderá todo el progreso con este objetivo.')){
-        deleteObjective(el.dataset.id);
-      }
-    } else if(action === 'pause'){
-      const id = el.dataset.id;
-      const obj = state.objectives.find(o => o.id === id);
-      if(!state.pauses) state.pauses = {};
-      if(!state.pauses[id]) state.pauses[id] = {};
-
-      if(obj) {
-        if(obj.paused) {
-          // Al Reanudar: Guarda los días que estuvo pausado en el historial
-          obj.paused = false;
-          if(obj.pausedSince) {
-            let curr = parse(obj.pausedSince);
-            const end = new Date();
-            while(curr <= end) {
-              const dstr = fmt(curr);
-              if(!state.completions[id] || !state.completions[id][dstr]) {
-                 state.pauses[id][dstr] = true;
-              }
-              curr.setDate(curr.getDate() + 1);
-            }
-            obj.pausedSince = null;
-          }
-        } else {
-          // Al Pausar: Anota la fecha de hoy
-          obj.paused = true;
-          obj.pausedSince = todayStr();
-          state.pauses[id][todayStr()] = true;
+        function deleteObjective(id){
+        state.objectives = state.objectives.filter(o => o.id !== id);
+        delete state.completions[id];
+        if(state.pauses) delete state.pauses[id];
+        if(selectedObjectiveId === id){
+        selectedObjectiveId = state.objectives.length ? state.objectives[0].id : null;
         }
         save();
         render();
-      }
-    } else if(action === 'add'){
-      const input = document.getElementById('new-obj-input');
-      addObjective(input.value);
-    } else if(action === 'select'){
-      selectedObjectiveId = el.dataset.id;
-      render();
-    } else if(action === 'prev-month'){
-      calMonth--; if(calMonth<0){calMonth=11;calYear--;}
-      render();
-    } else if(action === 'next-month'){
-      calMonth++; if(calMonth>11){calMonth=0;calYear++;}
-      render();
-    }
-  }
+        }
 
-  load();
-})();
-</script>
+        function toggle(id, dstr){
+        if(!state.completions[id]) state.completions[id] = {};
+        if(state.completions[id][dstr]) {
+        delete state.completions[id][dstr];
+        } else {
+        state.completions[id][dstr] = true;
+        }
+        save();
+        render();
+        }
 
-<script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
-  });
-}
-</script>
+        function streakFor(id){
+        const comp = state.completions[id] || {};
+        let n = 0;
+        let d = new Date();
+        if(!comp[fmt(d)]) d.setDate(d.getDate()-1);
+        while(comp[fmt(d)]){
+        n++;
+        d.setDate(d.getDate()-1);
+        }
+        return n;
+        }
+
+        function completionRate(id){
+        const obj = state.objectives.find(o=>o.id===id);
+        if(!obj) return {done:0,total:0};
+        const start = parse(obj.createdAt);
+        const end = new Date();
+        let total = 0, done = 0;
+        const comp = state.completions[id] || {};
+        const cursor = new Date(start);
+        while(cursor <= end){
+        const dstr = fmt(cursor);
+        if(comp[dstr]){
+        total++;
+        done++;
+        } else if(!isPaused(id, dstr)) {
+        total++;
+        }
+        cursor.setDate(cursor.getDate()+1);
+        }
+        return {done, total};
+        }
+
+        function render(){
+        const app = document.getElementById('app');
+        if(!ready){ app.innerHTML = '<div class="loading">Cargando…</div>'; return; }
+
+        const header = `
+        <div class="app-header">
+        <h1 class="app-title">Objetivos</h1>
+        <div class="app-date">${todayStr()}</div>
+        </div>
+        <div class="tabs">
+        <button class="tab ${view==='today'?'active':''}" data-action="view" data-view="today">Hoy</button>
+        <button class="tab ${view==='calendar'?'active':''}" data-action="view" data-view="calendar">Calendario</button>
+        </div>
+        `;
+
+        app.innerHTML = header + (view === 'today' ? renderToday() : renderCalendar());
+        attachEvents();
+        }
+
+        function renderToday(){
+        const t = todayStr();
+        if(!state.objectives.length){
+        return `<div class="empty">Todavía no tienes objetivos. Añade el primero abajo.</div>` + renderAddRow();
+        }
+
+        const activos = state.objectives.filter(o => !o.paused);
+        const pausados = state.objectives.filter(o => o.paused);
+
+        let rows = '';
+
+        activos.forEach(o => {
+        const done = !!(state.completions[o.id] && state.completions[o.id][t]);
+        const streak = streakFor(o.id);
+        rows += `
+        <div class="obj-row">
+        <button class="check ${done?'done':''}" data-action="toggle" data-id="${o.id}">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="obj-name ${done?'done':''}" data-action="toggle" data-id="${o.id}">${escapeHtml(o.name)}</span>
+        <span class="streak ${streak>=3?'hot':''}">${streak>0? streak+'d' : ''}</span>
+        <button class="del" data-action="pause" data-id="${o.id}" title="Pausar">⏸️</button>
+        <button class="del" data-action="delete" data-id="${o.id}" title="Eliminar">×</button>
+        </div>
+        `;
+        });
+
+        if(pausados.length > 0) {
+        rows += `<div style="margin-top:24px; margin-bottom: 8px; font-size:13px; color:var(--muted); font-weight:600;">Pausados</div>`;
+        pausados.forEach(o => {
+        const streak = streakFor(o.id);
+        rows += `
+        <div class="obj-row" style="background-color: #fef5d4; padding: 4px 10px; border-radius: 6px; border-bottom: none; margin-bottom: 6px;">
+        <button class="check" disabled style="opacity: 0.3; cursor: not-allowed;"></button>
+        <span class="obj-name" style="color: var(--gold); text-decoration: none;">${escapeHtml(o.name)}</span>
+        <span class="streak ${streak>=3?'hot':''}">${streak>0? streak+'d' : ''}</span>
+        <button class="del" data-action="pause" data-id="${o.id}" title="Reanudar">▶️</button>
+        <button class="del" data-action="delete" data-id="${o.id}" title="Eliminar">×</button>
+        </div>
+        `;
+        });
+        }
+
+        return rows + renderAddRow();
+        }
+
+        function renderAddRow(){
+        return `
+        <div class="add-row">
+        <input id="new-obj-input" type="text" placeholder="Nuevo objetivo diario…" maxlength="60" />
+        <button data-action="add" id="add-btn">Añadir</button>
+        </div>
+        `;
+        }
+
+        function renderCalendar(){
+        if(!state.objectives.length){
+        return `<div class="empty">Añade un objetivo en la pestaña «Hoy» para poder ver su calendario aquí.</div>`;
+        }
+        if(!selectedObjectiveId) selectedObjectiveId = state.objectives[0].id;
+
+        const picker = `
+        <div class="obj-picker">
+        ${state.objectives.map(o => `
+        <button class="obj-pick ${o.id===selectedObjectiveId?'active':''}" data-action="select" data-id="${o.id}">
+        ${escapeHtml(o.name)} ${o.paused ? '⏸️' : ''}
+        </button>
+        `).join('')}
+        </div>
+        `;
+
+        const obj = state.objectives.find(o=>o.id===selectedObjectiveId);
+        const comp = state.completions[selectedObjectiveId] || {};
+        const createdAt = parse(obj.createdAt);
+        const t = todayStr();
+
+        const first = new Date(calYear, calMonth, 1);
+        let startOffset = first.getDay() - 1;
+        if(startOffset < 0) startOffset = 6;
+        const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+        let cells = '';
+        for(let i=0;i<startOffset;i++) cells += `<div class="cell pad"></div>`;
+        for(let day=1; day<=daysInMonth; day++){
+        const d = new Date(calYear, calMonth, day);
+        const dstr = fmt(d);
+        let cls = 'cell';
+        let clickable = false;
+
+        if(d < new Date(createdAt.getFullYear(),createdAt.getMonth(),createdAt.getDate())){
+        cls += ' future';
+        } else if(dstr > t){
+        cls += ' future';
+        } else if(comp[dstr]){
+        cls += ' done';
+        clickable = true;
+        } else if(isPaused(selectedObjectiveId, dstr)) {
+        cls += ' paused';
+        } else {
+        cls += ' past';
+        clickable = true;
+        }
+        if(dstr === t) cls += ' today';
+        cells += `<div class="${cls}" ${clickable?`data-action="toggle" data-id="${selectedObjectiveId}" data-date="${dstr}"`:''}>${day}</div>`;
+        }
+
+        const rate = completionRate(selectedObjectiveId);
+        const pct = rate.total ? Math.round((rate.done/rate.total)*100) : 0;
+        const streak = streakFor(selectedObjectiveId);
+
+        return picker + `
+        <div class="month-nav">
+        <button data-action="prev-month">‹</button>
+        <span class="label">${MONTHS[calMonth]} ${calYear}</span>
+        <button data-action="next-month">›</button>
+        </div>
+        <div class="weekdays">${DOW.map(d=>`<span>${d}</span>`).join('')}</div>
+        <div class="grid">${cells}</div>
+        <div class="legend">
+        <span><i class="dot" style="background:var(--done)"></i>Cumplido</span>
+        <span><i class="dot" style="background:var(--missed-dim);border:1px solid var(--missed)"></i>Fallo</span>
+        <span><i class="dot" style="background:#fef5d4;border:1px solid var(--gold)"></i>Pausado</span>
+        </div>
+        <div class="stats">
+        <div class="stat"><b>${pct}%</b><span>cumplimiento</span></div>
+        <div class="stat"><b>${streak}</b><span>racha (días)</span></div>
+        <div class="stat"><b>${rate.done}/${rate.total}</b><span>días activos</span></div>
+        </div>
+        `;
+        }
+
+        function escapeHtml(s){
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+        }
+
+        function attachEvents(){
+        const app = document.getElementById('app');
+        app.querySelectorAll('[data-action]').forEach(el => {
+        el.addEventListener('click', onAction);
+        });
+        const input = document.getElementById('new-obj-input');
+        if(input){
+        input.addEventListener('keydown', e => {
+        if(e.key === 'Enter') addObjective(input.value);
+        });
+        }
+        }
+
+        function onAction(e){
+        const el = e.currentTarget;
+        const action = el.dataset.action;
+
+        if(action === 'view'){
+        view = el.dataset.view;
+        render();
+        } else if(action === 'toggle'){
+        const targetDate = el.dataset.date || todayStr();
+        toggle(el.dataset.id, targetDate);
+        } else if(action === 'delete'){
+        if(confirm('¿Eliminar el objetivo? Se perderá todo el progreso con este objetivo.')){
+        deleteObjective(el.dataset.id);
+        }
+        } else if(action === 'pause'){
+        const id = el.dataset.id;
+        const obj = state.objectives.find(o => o.id === id);
+        if(!state.pauses) state.pauses = {};
+        if(!state.pauses[id]) state.pauses[id] = {};
+
+        if(obj) {
+        if(obj.paused) {
+        obj.paused = false;
+        obj.pausedSince = null;
+        } else {
+        obj.paused = true;
+        obj.pausedSince = todayStr();
+        state.pauses[id][todayStr()] = true;
+        }
+        save();
+        render();
+        }
+        } else if(action === 'add'){
+        const input = document.getElementById('new-obj-input');
+        addObjective(input.value);
+        } else if(action === 'select'){
+        selectedObjectiveId = el.dataset.id;
+        render();
+        } else if(action === 'prev-month'){
+        calMonth--; if(calMonth<0){calMonth=11;calYear--;}
+        render();
+        } else if(action === 'next-month'){
+        calMonth++; if(calMonth>11){calMonth=0;calYear++;}
+        render();
+        }
+        }
+
+        load();
+        })();
+    </script>
+
+    <script>
+        if('serviceWorker' in navigator){
+        window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+        });
+        }
+    </script>
 </body>
 </html>
